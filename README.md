@@ -1,15 +1,17 @@
 # strata-contracts
 
-What an annotation is, independent of who produced it or where it is
-stored. The one package every other strata package imports, so a value has
-one description rather than three that drift.
+What crosses a boundary between strata packages, independent of who
+produces it or where it is stored: what an annotation is, what enters a
+catalog, and what a trainer is handed. The one package every other strata
+package imports, so each has one description rather than three that drift.
 
 ```bash
 uv add strata-contracts
 ```
 
-Depends on pydantic and nothing else. May not import anything that does
-I/O, any storage layer, any ML framework, or Label Studio.
+Depends on pydantic and `strata-common`, whose entry-point resolver finds
+the sample types. May not import anything that does I/O, any storage
+layer, any ML framework, or Label Studio.
 
 ## What it holds
 
@@ -44,6 +46,23 @@ from it. It states `MANIFEST_FORMAT`, and a reader refuses a format it
 does not know. `feature_digest` is the digest of a sample's features that
 keys the prediction cache.
 
+**Sample types** say what a sample is and what it must arrive with.
+`Image`, `Frames` and `Text` are built in, registered under the
+`strata.sample_types` entry point group like any plugin, and a type
+inherits: a subtype adds a `segment`, may narrow the extensions, and
+extends its parent's `Metadata` model, never loosening it. `Frames`
+requires `video`. `check_metadata` validates a sample's metadata against
+its type and keeps every key the type does not declare. How a type's bytes
+are stored is not decided here: canonical form is the catalog's.
+
+**The prepared index** is what a corpus declares itself in on its way into a
+catalog: `PreparedIndex`, at `prepared.json`, naming the type and every file
+with its metadata and any candidate annotation. `check` compares one with
+the files present and the type it names and returns every shortfall, so a
+preparer's tests and a catalog refuse the same things. It states
+`PREPARED_FORMAT`, and a reader refuses one it does not know. A model, not
+a reader: loading and saving it is its callers'.
+
 **Examples.** `strata.contracts.examples` holds a sample of every type. Each
 consuming package tests its own layer against all of them, so a type added
 here fails in each package until that package handles it.
@@ -52,12 +71,14 @@ here fails in each package until that package handles it.
 
 Recorded in the strata umbrella repository's `docs/adr/` (https://github.com/emaroppo/strata/tree/main/docs/adr): the manifest as the
 contract between catalog and modelling (0004), the prediction cache's third
-input (0006), features as plain JSON (0011), and a label set declaring its
-shape (0014).
+input (0006), sample types as plugins (0010), features as plain JSON (0011),
+a label set declaring its shape (0014), and what enters a catalog being
+declared outside it (0040).
 
 ## Tests
 
 ```bash
+.github/sibling-wheels.sh common   # the strata package this one needs, until it is on an index
 uv sync --find-links dist --group dev
 uv run pytest
 ```

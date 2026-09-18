@@ -1,12 +1,22 @@
 [project]
 name = "strata-contracts"
 version = "0.1.0"
-description = "What an annotation is, and what a trainer is handed: value types, schemas, the indexing contract, the manifest"
+description = "What crosses a boundary between strata packages: sample types and the prepared index going into a catalog, annotation values and schemas, the manifest a trainer is handed"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "pydantic>=2.0",
+    # The entry-point resolver, for sample types. Nothing else: its extras
+    # are what the packages running migrations or services need.
+    "strata-common>=0.1,<0.2",
 ]
+
+# What a catalog can take, read from what is installed. A plugin registers
+# here too; these names are reserved so one cannot replace them.
+[project.entry-points."strata.sample_types"]
+image = "strata.contracts.builtin_types:Image"
+frames = "strata.contracts.builtin_types:Frames"
+text = "strata.contracts.builtin_types:Text"
 
 # What developing this package alone needs beyond its extras. Inside the
 # strata workspace the root's group is used instead.
