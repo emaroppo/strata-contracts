@@ -5,8 +5,14 @@ produces it or where it is stored: what an annotation is, what enters a
 catalog, and what a trainer is handed. The one package every other strata
 package imports, so each has one description rather than three that drift.
 
+Not on PyPI: it installs from its repository at a release tag. uv takes a
+git source only for a package named directly, so the strata packages
+beneath it are named beside it.
+
 ```bash
-uv add strata-contracts
+g=git+https://github.com/emaroppo
+uv add "strata-contracts @ $g/strata-contracts@v0.1.0" \
+       "strata-common @ $g/strata-common@v0.1.0"
 ```
 
 Depends on pydantic and `strata-common`, whose entry-point resolver finds
@@ -78,7 +84,7 @@ declared outside it (0040).
 ## Tests
 
 ```bash
-.github/sibling-wheels.sh common   # the strata package this one needs, until it is on an index
+.github/sibling-wheels.sh common   # the strata packages this one needs, from their repositories
 uv sync --find-links dist --group dev
 uv run pytest
 ```
