@@ -8,7 +8,7 @@ the indexing contract.
 import pytest
 from pydantic import TypeAdapter, ValidationError
 
-from strata.labels import (
+from strata.contracts import (
     AnySchema,
     AnyValue,
     BBoxSchema,

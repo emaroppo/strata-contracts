@@ -2,7 +2,7 @@
 
 The rest of each type's journey — the catalog, modelling, Label Studio — is
 tested in the package that owns each layer, against the same examples. See
-``strata.labels.examples``.
+``strata.contracts.examples``.
 
 These exist because of how the failures look. A value serialises happily
 whatever it is, and read back as the wrong type it parses without complaint
@@ -16,7 +16,7 @@ from typing import get_args
 import pytest
 from pydantic import TypeAdapter
 
-from strata.labels import (
+from strata.contracts import (
     MANIFEST_FORMAT,
     MANIFEST_NAME,
     AnyPrediction,
@@ -26,7 +26,7 @@ from strata.labels import (
     ManifestSample,
     Prediction,
 )
-from strata.labels.examples import EXAMPLES
+from strata.contracts.examples import EXAMPLES
 
 _VALUE = TypeAdapter(AnyValue)
 _PREDICTION = TypeAdapter(AnyPrediction)

@@ -3,7 +3,7 @@
 import pytest
 from pydantic import ValidationError
 
-from strata.labels import (
+from strata.contracts import (
     Box,
     Boxes,
     BoxesPrediction,

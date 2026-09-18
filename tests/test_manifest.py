@@ -4,7 +4,7 @@ import json
 
 import pytest
 
-from strata.labels import (
+from strata.contracts import (
     MANIFEST_FORMAT,
     ClassificationSchema,
     Manifest,
@@ -123,7 +123,7 @@ def test_the_digest_is_pinned():
 def test_the_sides_travel_positionally_with_a_proof_of_the_order():
     import hashlib
 
-    from strata.labels import order_digest, sides_from_string, sides_string
+    from strata.contracts import order_digest, sides_from_string, sides_string
 
     held = (("a", "train"), ("b", "val"), ("c", "holdout"), ("d", "train"))
     samples = [{"checksum": c * 64, "path": f"files/{c}", "split": side} for c, side in held]

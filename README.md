@@ -1,11 +1,11 @@
-# strata-labels
+# strata-contracts
 
 What an annotation is, independent of who produced it or where it is
 stored. The one package every other strata package imports, so a value has
 one description rather than three that drift.
 
 ```bash
-uv add strata-labels
+uv add strata-contracts
 ```
 
 Depends on pydantic and nothing else. May not import anything that does
@@ -44,7 +44,7 @@ from it. It states `MANIFEST_FORMAT`, and a reader refuses a format it
 does not know. `feature_digest` is the digest of a sample's features that
 keys the prediction cache.
 
-**Examples.** `strata.labels.examples` holds a sample of every type. Each
+**Examples.** `strata.contracts.examples` holds a sample of every type. Each
 consuming package tests its own layer against all of them, so a type added
 here fails in each package until that package handles it.
 
@@ -62,4 +62,4 @@ uv sync --find-links dist --group dev
 uv run pytest
 ```
 
-Inside the strata workspace: `uv run pytest packages/labels` from its root.
+Inside the strata workspace: `uv run pytest packages/contracts` from its root.

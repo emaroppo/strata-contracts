@@ -68,7 +68,7 @@ class Span(BaseModel):
 
     **Labels, plural.** A region carrying two labels is *one* span with two
     labels, not two spans at the same offsets. Whether a label set permits
-    either is :class:`~strata.labels.SpanSchema`'s to declare. See
+    either is :class:`~strata.contracts.SpanSchema`'s to declare. See
     ``docs/adr/0014``.
     """
 

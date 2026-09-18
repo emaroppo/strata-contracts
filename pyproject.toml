@@ -1,5 +1,5 @@
 [project]
-name = "strata-labels"
+name = "strata-contracts"
 version = "0.1.0"
 description = "What an annotation is, and what a trainer is handed: value types, schemas, the indexing contract, the manifest"
 readme = "README.md"
