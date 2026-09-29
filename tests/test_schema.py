@@ -34,7 +34,7 @@ def test_class_order_survives_a_round_trip():
 
 
 def test_the_task_discriminator_is_stored(schema):
-    assert schema.model_dump()["task"] == "classification"
+    assert schema.model_dump()["label_type"] == "classification"
 
 
 def test_multiple_defaults_to_true():

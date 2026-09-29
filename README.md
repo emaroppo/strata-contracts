@@ -21,9 +21,9 @@ layer, any ML framework, or Label Studio.
 
 ## What it holds
 
-**Values** are the payload of an annotation, one per task type,
+**Values** are the payload of an annotation, one per label type,
 discriminated on `kind` so a value round-trips out of JSON as the right
-type without the reader knowing which task it came from:
+type without the reader knowing which label type it came from:
 
 | kind | value | prediction |
 |---|---|---|
@@ -37,7 +37,8 @@ An empty value is an answer: a reviewer looked and found none of the
 classes present. Values are frozen and forbid unknown fields, because a
 typo that produced an empty value would land in a catalog as that answer.
 
-**Schemas** describe a label set: the task, its classes, and the rules
+**Schemas** describe a label set: its label type (`label_type`: what an
+annotation looks like, not what it is for), its classes, and the rules
 over them. `ClassificationSchema`, `SpanSchema` and `BBoxSchema`, with
 `AnySchema` as the union. Each validates a value against its class list
 and answers the indexing contract, *which classes does this value assert*,

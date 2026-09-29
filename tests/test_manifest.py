@@ -19,7 +19,7 @@ def _fields(**overrides) -> dict:
         "dataset": "d",
         "version": 1,
         "label_set": "x",
-        "label_schema": {"task": "classification", "classes": ["a"]},
+        "label_schema": {"label_type": "classification", "classes": ["a"]},
     }
     fields.update(overrides)
     return fields
@@ -45,8 +45,23 @@ def test_a_manifest_that_does_not_say_is_refused():
 
 
 def test_a_format_this_release_does_not_read_is_refused():
-    with pytest.raises(ManifestFormatError, match=f"format 2.*reads format {MANIFEST_FORMAT}"):
-        Manifest.model_validate_json(json.dumps(_fields(format=2)))
+    later = MANIFEST_FORMAT + 1
+    with pytest.raises(
+        ManifestFormatError, match=f"format {later}.*reads format {MANIFEST_FORMAT}"
+    ):
+        Manifest.model_validate_json(json.dumps(_fields(format=later)))
+
+
+def test_a_format_1_manifest_is_stale_rather_than_broken():
+    """Format 1 said ``task`` where this says ``label_type`` (docs/adr/0041).
+
+    Stale, so a catalog rebuilds it; read as this layout it would fail the
+    schema's discriminator instead, which is broken, and would crash.
+    """
+    fields = _fields(format=1)
+    fields["label_schema"] = {"task": "classification", "classes": ["a"]}
+    with pytest.raises(ManifestFormatError, match="materialise the dataset version again"):
+        Manifest.model_validate_json(json.dumps(fields))
 
 
 def test_the_samples_divide_three_ways():

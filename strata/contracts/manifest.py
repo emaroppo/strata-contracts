@@ -19,7 +19,8 @@ from .values import AnyValue
 MANIFEST_NAME = "manifest.json"
 FILES_DIR = "files"
 #: The layout this release writes, and the only one it reads.
-MANIFEST_FORMAT = 1
+#: 2: a label schema says ``label_type`` where it said ``task``. docs/adr/0041
+MANIFEST_FORMAT = 2
 
 
 class ManifestFormatError(Exception):
@@ -50,7 +51,7 @@ class ManifestSample(BaseModel):
     split: Literal["train", "val", "holdout"]
     #: Null when the sample was skipped. An empty value is different: a
     #: human looked and found nothing, which is an answer. Any annotation
-    #: payload, not one task's (``docs/adr/0004``).
+    #: payload, not one label type's (``docs/adr/0004``).
     value: AnyValue | None = None
     #: Where the label came from — ``human``, ``import`` — as the catalog
     #: recorded it when this version was written.

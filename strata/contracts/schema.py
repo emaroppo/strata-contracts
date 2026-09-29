@@ -1,4 +1,4 @@
-"""What a label set is: the task, its classes, and the rules over them.
+"""What a label set is: its label type, its classes, and the rules over them.
 
 A schema is stored data — it is what ``catalog.label_set`` holds — so it is a
 model. The behaviour it carries is pure: validating a value against the class
@@ -22,7 +22,7 @@ class SchemaError(ValueError):
 
 
 def _shared_class_validator():
-    """The class-list rules every task type shares."""
+    """The class-list rules every label type shares."""
 
     def check(self):
         if any(not c.strip() for c in self.classes):
@@ -35,10 +35,12 @@ def _shared_class_validator():
     return model_validator(mode="after")(check)
 
 
-def _expect[V: Value](kind: type[V], value: Value, task: str) -> V:
-    """``value`` as the type a ``task`` label set holds, or a refusal that names both."""
+def _expect[V: Value](kind: type[V], value: Value, label_type: str) -> V:
+    """``value`` as the type a ``label_type`` label set holds, or a refusal that names both."""
     if not isinstance(value, kind):
-        raise SchemaError(f"a {task} label set holds {kind.__name__}, not {type(value).__name__}")
+        raise SchemaError(
+            f"a {label_type} label set holds {kind.__name__}, not {type(value).__name__}"
+        )
     return value
 
 
@@ -54,7 +56,7 @@ def _refuse_unknown_classes(known: list[str], used) -> None:
 class ClassificationSchema(BaseModel):
     """Classes for a whole sample."""
 
-    task: Literal["classification"] = "classification"
+    label_type: Literal["classification"] = "classification"
     #: Append-only by convention (``docs/adr/0005``).
     classes: list[str] = Field(default_factory=list)
     #: False for mutually exclusive classes.
@@ -70,7 +72,7 @@ class ClassificationSchema(BaseModel):
         An empty value is valid: a human looked and found nothing, which is an
         answer (``docs/adr/0009``).
         """
-        value = _expect(Choices, value, self.task)
+        value = _expect(Choices, value, self.label_type)
         _refuse_unknown_classes(self.classes, value.values)
         if not self.multiple and len(value.values) > 1:
             raise SchemaError(
@@ -87,7 +89,7 @@ class ClassificationSchema(BaseModel):
     # understand.
 
     def classes_asserted(self, value: Value) -> set[str]:
-        value = _expect(Choices, value, self.task)
+        value = _expect(Choices, value, self.label_type)
         return set(value.values)
 
     # Ranking is not here: turning confidences into a review order is the
@@ -102,7 +104,7 @@ class SpanSchema(BaseModel):
     ``docs/adr/0014``.
     """
 
-    task: Literal["span"] = "span"
+    label_type: Literal["span"] = "span"
     classes: list[str] = Field(default_factory=list)
     #: May one region carry more than one label?
     multi_label: bool = False
@@ -114,7 +116,7 @@ class SpanSchema(BaseModel):
     _classes_are_usable = _shared_class_validator()
 
     def validate_value(self, value: Value) -> None:
-        value = _expect(Spans, value, self.task)
+        value = _expect(Spans, value, self.label_type)
         _refuse_unknown_classes(self.classes, (label for s in value.values for label in s.labels))
         for span in value.values:
             if span.text and len(span.text) != span.end - span.start:
@@ -153,14 +155,14 @@ class SpanSchema(BaseModel):
             )
 
     def classes_asserted(self, value: Value) -> set[str]:
-        value = _expect(Spans, value, self.task)
+        value = _expect(Spans, value, self.label_type)
         return {label for s in value.values for label in s.labels if label}
 
 
 class BBoxSchema(BaseModel):
     """Labelled rectangles over an image."""
 
-    task: Literal["bbox"] = "bbox"
+    label_type: Literal["bbox"] = "bbox"
     classes: list[str] = Field(default_factory=list)
 
     model_config = {"frozen": True}
@@ -168,13 +170,16 @@ class BBoxSchema(BaseModel):
     _classes_are_usable = _shared_class_validator()
 
     def validate_value(self, value: Value) -> None:
-        value = _expect(Boxes, value, self.task)
+        value = _expect(Boxes, value, self.label_type)
         _refuse_unknown_classes(self.classes, (b.label for b in value.values))
 
     def classes_asserted(self, value: Value) -> set[str]:
-        value = _expect(Boxes, value, self.task)
+        value = _expect(Boxes, value, self.label_type)
         return {b.label for b in value.values if b.label}
 
 
-#: Every schema, discriminated on ``task``.
-AnySchema = Annotated[ClassificationSchema | SpanSchema | BBoxSchema, Field(discriminator="task")]
+#: Every schema, discriminated on ``label_type``: what an annotation looks
+#: like, not what it is for. See ``docs/adr/0041``.
+AnySchema = Annotated[
+    ClassificationSchema | SpanSchema | BBoxSchema, Field(discriminator="label_type")
+]

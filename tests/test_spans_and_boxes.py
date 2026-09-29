@@ -327,14 +327,14 @@ def test_an_image_with_no_boxes_asserts_nothing():
 )
 def test_a_value_recovers_its_type_from_json(payload, expected):
     # What lets a reader pull an annotation out of storage without being
-    # told which task produced it
+    # told which label type produced it
     assert isinstance(TypeAdapter(AnyValue).validate_python(payload), expected)
 
 
-@pytest.mark.parametrize("task", ["classification", "span", "bbox"])
-def test_a_schema_recovers_its_type_from_json(task):
-    restored = TypeAdapter(AnySchema).validate_python({"task": task, "classes": ["a"]})
-    assert restored.task == task
+@pytest.mark.parametrize("label_type", ["classification", "span", "bbox"])
+def test_a_schema_recovers_its_type_from_json(label_type):
+    restored = TypeAdapter(AnySchema).validate_python({"label_type": label_type, "classes": ["a"]})
+    assert restored.label_type == label_type
 
 
 def test_an_unknown_kind_is_refused():

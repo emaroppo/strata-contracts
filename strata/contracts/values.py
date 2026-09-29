@@ -1,9 +1,9 @@
 """What an annotation says, and what a model guesses it says.
 
-Values are the payload of an annotation, independent of the task that
-produced them and of any storage. One class per task type, discriminated on
+Values are the payload of an annotation, independent of the label set that
+produced them and of any storage. One class per label type, discriminated on
 ``kind`` so a value round-trips out of JSON as the right type without the
-reader knowing which task it came from.
+reader knowing which label type it came from.
 
 A prediction is the same value plus the model's confidence in it. See
 ``docs/adr/0012``.
