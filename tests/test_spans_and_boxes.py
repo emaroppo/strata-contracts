@@ -96,6 +96,53 @@ def test_a_malformed_span_in_a_set_is_reported_by_field_validation():
         Spans.model_validate({"kind": "spans", "values": [{"labels": ["A"], "start": 5, "end": 1}]})
 
 
+def test_a_span_starting_inside_a_run_of_spaces_is_trimmed():
+    # What Label Studio returns after aligned text: it shows the run as one space
+    text = "Location:   B2\nRoom:  4120 "
+    spans = Spans(
+        values=[Span(labels=["LOC"], start=10, end=14), Span(labels=["LOC"], start=21, end=27)]
+    )
+    trimmed, changed = spans.trimmed(text)
+    assert changed == 2
+    assert [(s.start, s.end, s.text) for s in trimmed.values] == [(12, 14, "B2"), (22, 26, "4120")]
+
+
+def test_a_carriage_return_counts_as_whitespace_and_as_an_offset():
+    text = "Hi\r\n  Ana Novak"
+    trimmed, _ = Spans(values=[Span(labels=["PER"], start=2, end=15)]).trimmed(text)
+    assert [(s.start, s.text) for s in trimmed.values] == [(6, "Ana Novak")]
+
+
+def test_a_span_of_only_whitespace_is_dropped():
+    trimmed, changed = Spans(values=[Span(labels=["PER"], start=0, end=3)]).trimmed("   x")
+    assert changed == 1
+    assert trimmed.values == []
+
+
+def test_spans_already_tight_come_back_unchanged():
+    spans = Spans(values=[Span(labels=["PER"], start=0, end=3, text="Ana")])
+    trimmed, changed = spans.trimmed("Ana said")
+    assert changed == 0
+    assert trimmed == spans
+
+
+def test_a_span_past_the_end_of_its_text_is_left_alone():
+    # Not a whitespace problem, and not this method's to repair
+    spans = Spans(values=[Span(labels=["PER"], start=2, end=40)])
+    assert spans.trimmed("  Ana")[0] == spans
+
+
+def test_a_dropped_span_takes_its_confidence_with_it():
+    prediction = SpansPrediction(
+        values=[Span(labels=["PER"], start=0, end=2), Span(labels=["PER"], start=3, end=6)],
+        confidences=[0.4, 0.9],
+    )
+    trimmed, _ = prediction.trimmed("   Ana")
+    assert isinstance(trimmed, SpansPrediction)
+    assert [(s.start, s.end) for s in trimmed.values] == [(3, 6)]
+    assert trimmed.confidences == [0.9]
+
+
 def test_span_text_must_match_its_offsets():
     # The offsets are authoritative, so a disagreeing substring is a bug
     # somewhere upstream rather than something to store quietly

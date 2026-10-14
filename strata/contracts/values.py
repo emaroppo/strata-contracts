@@ -120,6 +120,41 @@ class Spans(Value):
             data["confidences"] = [confidences[i] for i in order]
         return data
 
+    def trimmed(self, text: str) -> tuple["Spans", int]:
+        """These spans with surrounding whitespace moved out, and how many changed.
+
+        A span is a range over ``text`` exactly as stored, ``\\r`` included.
+        Label Studio shows a document as HTML, which renders a run of spaces
+        as one, so a selection after aligned text comes back starting inside
+        the run. A span that is nothing but whitespace is dropped, and its
+        confidence with it. One that runs past ``text`` is left alone.
+        """
+        kept: list[Span] = []
+        positions: list[int] = []
+        changed = 0
+        for i, span in enumerate(self.values):
+            start, end = span.start, span.end
+            if end <= len(text):
+                while start < end and text[start].isspace():
+                    start += 1
+                while end > start and text[end - 1].isspace():
+                    end -= 1
+            if start == end and span.start != span.end:
+                changed += 1
+                continue
+            if (start, end) != (span.start, span.end):
+                changed += 1
+                span = span.model_copy(update={"start": start, "end": end, "text": text[start:end]})
+            kept.append(span)
+            positions.append(i)
+        if not changed:
+            return self, 0
+        data = {name: getattr(self, name) for name in type(self).model_fields}
+        data["values"] = kept
+        if getattr(self, "confidences", None):
+            data["confidences"] = [self.confidences[i] for i in positions]  # type: ignore[attr-defined]
+        return type(self)(**data), changed
+
 
 def _span_key(span: object) -> tuple[int, int, tuple[str, ...]]:
     if isinstance(span, dict):
