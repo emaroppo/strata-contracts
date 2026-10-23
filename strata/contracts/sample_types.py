@@ -12,7 +12,7 @@ to the catalog that stores them. See ``docs/adr/0010`` and ``docs/adr/0040``.
 
 from importlib.metadata import entry_points
 from pathlib import Path
-from typing import ClassVar
+from typing import Any, ClassVar
 
 from pydantic import BaseModel, ConfigDict, ValidationError
 
@@ -113,6 +113,16 @@ class SampleType:
         """Whether this type admits a file, by extension."""
         suffix = Path(path).suffix.lower().lstrip(".")
         return bool(suffix) and suffix in self.extensions
+
+    def facts(self, data: bytes) -> dict[str, Any]:
+        """What these bytes say about themselves, recorded on the sample.
+
+        Called by the catalog on the canonical bytes, after preparation, so
+        every occurrence of one sample agrees on them by construction. A
+        fact about where the bytes were found belongs to the origin, not
+        here. Plain JSON values. None by default. See ``docs/adr/0049``.
+        """
+        return {}
 
     def check_metadata(self, metadata: dict) -> dict:
         """``metadata`` as this type requires it, or the reason it falls short.

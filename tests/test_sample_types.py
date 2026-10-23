@@ -8,6 +8,7 @@ would have been refused.
 """
 
 from pathlib import Path
+from typing import ClassVar
 
 import pytest
 
@@ -186,3 +187,15 @@ def test_resolving_gives_the_class():
 def test_an_unknown_type_says_what_is_installed():
     with pytest.raises(SampleTypeError, match="image"):
         resolve("satellite")
+
+
+def test_a_type_says_nothing_about_its_bytes_unless_it_computes_something():
+    assert Text().facts(b"some words") == {}
+
+    class Counted(Text):
+        segment: ClassVar[str] = "counted"
+
+        def facts(self, data: bytes) -> dict:
+            return {"word_count": len(data.split())}
+
+    assert Counted().facts(b"some words") == {"word_count": 2}
