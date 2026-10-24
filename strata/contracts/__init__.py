@@ -17,7 +17,15 @@ Why the manifest lives here: ``docs/adr/0004``; the sample types and the
 prepared index: ``docs/adr/0040``.
 """
 
-from .builtin_types import Frames, Image, Text
+from .builtin_types import (
+    Frames,
+    GeneratedMedia,
+    GeneratedText,
+    Image,
+    SFTExample,
+    SFTTextExample,
+    Text,
+)
 from .manifest import (
     FILES_DIR,
     MANIFEST_FORMAT,
@@ -80,6 +88,8 @@ __all__ = [
     "ChoicesPrediction",
     "ClassificationSchema",
     "Frames",
+    "GeneratedMedia",
+    "GeneratedText",
     "Image",
     "Manifest",
     "ManifestFormatError",
@@ -89,6 +99,8 @@ __all__ = [
     "PreparedFormatError",
     "PreparedIndex",
     "PreparedSample",
+    "SFTExample",
+    "SFTTextExample",
     "SampleType",
     "SampleTypeError",
     "SchemaError",

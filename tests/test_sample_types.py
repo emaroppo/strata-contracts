@@ -12,7 +12,15 @@ from typing import ClassVar
 
 import pytest
 
-from strata.contracts.builtin_types import Frames, Image, Text
+from strata.contracts.builtin_types import (
+    Frames,
+    GeneratedMedia,
+    GeneratedText,
+    Image,
+    SFTExample,
+    SFTTextExample,
+    Text,
+)
 from strata.contracts.sample_types import (
     PLAIN,
     SampleType,
@@ -199,3 +207,89 @@ def test_a_type_says_nothing_about_its_bytes_unless_it_computes_something():
             return {"word_count": len(data.split())}
 
     assert Counted().facts(b"some words") == {"word_count": 2}
+
+
+# ----------------------------------------------------------------------
+# What a sample is for: generated media and fine-tuning examples
+# ----------------------------------------------------------------------
+
+
+def test_generated_text_is_text_that_says_a_model_wrote_it():
+    """A mixin, so a query for text still returns it (docs/adr/0053)."""
+    assert GeneratedText.media == "text"
+    assert GeneratedText.subtype() == "generated"
+    assert issubclass(GeneratedText, Text) and issubclass(GeneratedText, GeneratedMedia)
+
+
+def test_a_projects_generated_type_inherits_both():
+    class Email(GeneratedText):
+        segment: ClassVar[str] = "phishnet-email"
+
+    assert (Email.media, Email.subtype()) == ("text", "generated/phishnet-email")
+    assert issubclass(Email, GeneratedMedia)
+
+
+def test_a_fine_tuning_example_is_the_text_it_should_write():
+    assert (SFTTextExample.media, SFTTextExample.subtype()) == ("text", "sft")
+    assert issubclass(SFTTextExample, SFTExample)
+    assert not issubclass(SFTTextExample, GeneratedMedia)
+
+
+def test_a_mixin_is_not_a_type_of_its_own():
+    """A type with no media would mean nothing, so neither can be registered as one."""
+    assert not issubclass(GeneratedMedia, SampleType)
+    assert not issubclass(SFTExample, SampleType)
+
+
+def test_an_examples_input_is_metadata_its_type_requires():
+    class Template(SFTTextExample):
+        segment: ClassVar[str] = "template"
+        inputs: ClassVar[tuple[str, ...]] = ("subject", "urls")
+
+        class Metadata(SFTTextExample.Metadata):
+            subject: str
+            urls: bool
+
+    assert Template.subtype() == "sft/template"
+    assert Template().check_metadata({"subject": "Hi", "urls": False, "corpus": "enron"}) == {
+        "subject": "Hi",
+        "urls": False,
+        "corpus": "enron",
+    }
+    with pytest.raises(SampleTypeError, match="subject"):
+        Template().check_metadata({"urls": False})
+    assert Template.input_of({"subject": "Hi", "urls": False, "corpus": "enron"}) == {
+        "subject": "Hi",
+        "urls": False,
+    }
+
+
+def test_an_input_the_metadata_does_not_require_is_refused():
+    """Otherwise an origin could arrive without it, and the example has nothing to train on."""
+    with pytest.raises(SampleTypeError, match="subject"):
+
+        class Unrequired(SFTTextExample):
+            segment: ClassVar[str] = "unrequired"
+            inputs: ClassVar[tuple[str, ...]] = ("subject",)
+
+
+def test_a_type_can_fold_two_spellings_of_one_input():
+    class Folded(SFTTextExample):
+        segment: ClassVar[str] = "folded"
+        inputs: ClassVar[tuple[str, ...]] = ("subject",)
+
+        class Metadata(SFTTextExample.Metadata):
+            subject: str
+
+        @classmethod
+        def input_of(cls, metadata: dict) -> dict:
+            return {"subject": " ".join(metadata["subject"].split())}
+
+    assert Folded.input_of({"subject": "Re:  lunch\n tomorrow"}) == Folded.input_of(
+        {"subject": "Re: lunch tomorrow"}
+    )
+
+
+def test_the_generated_and_fine_tuning_types_are_registered():
+    assert resolve("generated-text") is GeneratedText
+    assert resolve("sft-text") is SFTTextExample

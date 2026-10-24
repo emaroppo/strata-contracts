@@ -17,6 +17,8 @@ dependencies = [
 image = "strata.contracts.builtin_types:Image"
 frames = "strata.contracts.builtin_types:Frames"
 text = "strata.contracts.builtin_types:Text"
+generated-text = "strata.contracts.builtin_types:GeneratedText"
+sft-text = "strata.contracts.builtin_types:SFTTextExample"
 
 # What developing this package alone needs beyond its extras. Inside the
 # strata workspace the root's group is used instead.
