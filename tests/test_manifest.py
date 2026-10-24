@@ -96,6 +96,14 @@ def test_the_least_a_producer_outside_strata_must_say():
     assert (sample.id, sample.source, sample.reviewed) == (None, None, None)
 
 
+def test_a_sample_written_before_its_type_was_still_reads():
+    """The type came later and has a default, so the format did not change (docs/adr/0052)."""
+    old = {"checksum": "0" * 64, "path": "files/0", "split": "train"}
+    typed = {**old, "checksum": "1" * 64, "path": "files/1", "type": "text/email"}
+    manifest = Manifest.model_validate(_fields(samples=[old, typed]))
+    assert [s.type for s in manifest.samples] == [None, "text/email"]
+
+
 def test_a_refusal_is_not_a_validation_error():
     """Stale and broken need telling apart: the first is rebuilt, the second is a bug."""
     assert not issubclass(ManifestFormatError, ValueError)

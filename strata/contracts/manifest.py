@@ -39,6 +39,11 @@ class ManifestSample(BaseModel):
     #: survives anywhere (``docs/adr/0008``).
     id: int | None = None
     checksum: str
+    #: The sample's media and stored subtype, ``text/email``: with the
+    #: checksum, its identity, since the same bytes as two types are two
+    #: samples. Null in a manifest written before the type was, matched on
+    #: the checksum alone where that is unambiguous. See ``docs/adr/0052``.
+    type: str | None = None
     #: Relative to the manifest's own directory, so the whole thing moves.
     path: str
     #: What the catalog recorded about the sample: where it came from, its
